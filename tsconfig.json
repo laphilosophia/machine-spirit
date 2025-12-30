@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    /* Project Structure */
+    "rootDir": ".",
+    "outDir": "./dist",
+    "composite": true,
+    /* Language and Environment */
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    /* Strictness */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    /* Code Quality */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    /* Interop */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "forge/**/*.ts",
+    "daemon/**/*.ts",
+    "chapel/**/*.ts",
+    "shrine/**/*.ts",
+    "testaments/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts"
+  ]
+}
