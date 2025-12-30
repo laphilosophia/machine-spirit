@@ -5,7 +5,7 @@ import type {
   Outcome,
   Scar,
   VocabToken,
-} from './types'
+} from '../types'
 
 export class LearningEngine {
   private associations: Map<string, Association> = new Map()
@@ -246,6 +246,15 @@ export class LearningEngine {
         staleness: 0,
       }
     )
+  }
+
+  /**
+   * Returns and clears pending scars for persistence
+   */
+  getNewScars(): Scar[] {
+    const pending = [...this.scars]
+    this.scars = []
+    return pending
   }
 
   /**

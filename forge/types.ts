@@ -62,4 +62,6 @@ export interface WillContext {
   purity: number
   time: number
   userId?: string
+  semanticNovelty?: number
+  semanticAlignment?: number
 }

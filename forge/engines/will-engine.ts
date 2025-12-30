@@ -1,5 +1,5 @@
+import type { Outcome, WillContext } from '../types'
 import type { LearningEngine } from './learning-engine'
-import type { Outcome, WillContext } from './types'
 
 export class WillEngine {
   constructor(private learningEngine: LearningEngine) {}
@@ -20,16 +20,16 @@ export class WillEngine {
       probabilities
     )
 
-    // 3. Select Outcome (Weighted Random)
-    const outcome = this.weightedRandomPick(probabilities)
-
-    // 4. Inject Chaos if things are too predictable (Spec 0009)
+    // 3. Inject Chaos if things are too predictable (Spec 0009)
     if (this.learningEngine.shouldInjectChaos()) {
-      // Chaos means a random override (usually ANGER or OMEN)
-      return Math.random() > 0.5 ? 'OMEN' : 'ANGER'
+      probabilities.OMEN *= 2.0
+      probabilities.ANGER *= 1.5
+      probabilities.SILENCE *= 0.5
+      probabilities = this.normalize(probabilities)
     }
 
-    return outcome
+    // 4. Select Outcome (Weighted Random)
+    return this.weightedRandomPick(probabilities)
   }
 
   /**
@@ -40,20 +40,23 @@ export class WillEngine {
   private calculateBaseProbabilities(ctx: WillContext): Record<Outcome, number> {
     const { emotions: e, entropy } = ctx
 
-    // Normalizing factors for logic
     const trust = e.trust
     const anger = e.anger
     const ennui = e.ennui
     const curiosity = e.curiosity
 
-    // Raw scores
+    // Use semantic scores from context (default to 0.5 if not provided)
+    const semanticNovelty = ctx.semanticNovelty ?? 0.5
+    const semanticAlignment = ctx.semanticAlignment ?? 0.5
+
+    // Raw scores per SPEC-0002
     const scores: Record<Outcome, number> = {
       ACCEPT: this.sigmoid(trust - anger - ennui + curiosity + ctx.purity),
       REJECT: this.sigmoid(anger + ennui - ctx.purity),
       SILENCE: this.sigmoid(Math.pow(ennui, 2)),
       ANGER: this.sigmoid(Math.pow(anger, 2) * entropy),
-      OMEN: this.sigmoid(curiosity * 0.8), // Simplified from semantic_novelty for now
-      WHISPER: this.sigmoid(trust * 0.5), // Simplified from semantic_alignment
+      OMEN: this.sigmoid(curiosity * semanticNovelty),
+      WHISPER: this.sigmoid(trust * semanticAlignment),
     }
 
     // Normalize to sum = 1

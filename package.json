@@ -1,16 +1,26 @@
 {
   "name": "machine-spirit",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A stateful probabilistic CLI agent",
+  "main": "dist/forge/index.js",
+  "bin": {
+    "spirit": "dist/chapel/index.js"
+  },
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/chapel/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "cli",
+    "agent",
+    "spirit"
+  ],
+  "author": "Erdem Arslan <erdemarslan@ymail.com>",
+  "license": "WTFPL",
   "dependencies": {
     "better-sqlite3": "^12.5.0",
+    "chalk": "5",
     "dotenv": "^17.2.3",
     "typescript": "^5.9.3"
   },

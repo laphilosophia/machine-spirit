@@ -1,7 +1,10 @@
+import type { Outcome } from '../types'
+
 export class WarmMemory {
   private cache: Map<string, number> = new Map()
   private readonly MAX_SIZE = 128
   private recentInputs: string[] = []
+  private lastOutcome: Outcome | undefined = undefined
 
   constructor() {}
 
@@ -28,6 +31,13 @@ export class WarmMemory {
   }
 
   /**
+   * Record the outcome of the last interaction
+   */
+  recordOutcome(outcome: Outcome): void {
+    this.lastOutcome = outcome
+  }
+
+  /**
    * Calculates repetition score (0.0 to 1.0)
    * Based on frequency of this exact input in recent history
    */
@@ -39,14 +49,11 @@ export class WarmMemory {
     return Math.min(1.0, (matches - 1) * 0.2)
   }
 
-  getSnapshot(): { repetitionScore: number } {
-    // This is a simplified snapshot based on the *last* item pushed
-    // In reality, the Spirit asks about the *current* input.
-    // So this might need the input as arg, or assume the last pushed IS the current.
-    // Spec says: "checks redundancy against Warm Memory"
+  getSnapshot(): { repetitionScore: number; lastOutcome?: Outcome } {
     const lastInput = this.recentInputs[this.recentInputs.length - 1] || ''
     return {
       repetitionScore: this.calculateRepetitionScore(lastInput),
+      ...(this.lastOutcome !== undefined && { lastOutcome: this.lastOutcome }),
     }
   }
 }
