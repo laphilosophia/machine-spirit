@@ -1,6 +1,5 @@
-// Shrine Module - Output Generation
-// Sacred texts: omens, whispers, and glyphs
+// Shrine Module - Prophecy Generation
+// Barrel exports for omen and whisper generators
 
-// TODO: Implement prophecy generation
-
-export {}
+export { generateOmen, type OmenContext } from './omen'
+export { generateWhisper, type WhisperContext } from './whisper'
