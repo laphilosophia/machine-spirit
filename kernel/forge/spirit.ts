@@ -94,10 +94,18 @@ export class Spirit {
   /**
    * Perform maintenance ritual to appease the Spirit.
    */
-  maintain(ritual: MaintenanceRitual): void {
+  maintain(ritual: MaintenanceRitual, userId?: string): void {
     this.maintenanceEngine.performMaintenance(ritual)
     this.coldMemory.saveMaintenance(this.maintenanceEngine.getState())
-    console.log(`Maintenance ritual '${ritual}' performed. The Spirit is appeased.`)
+
+    if (userId) {
+      // Rituals are strongly positive for bonds
+      this.bondEngine.recordInteraction(userId, 'ACCEPT')
+    }
+
+    console.log(
+      `Maintenance ritual '${ritual}' performed by ${userId || 'unknown'}. The Spirit is appeased.`
+    )
   }
 
   /**
@@ -219,7 +227,7 @@ export class Spirit {
     }
 
     // 10. Persist Interaction
-    this.coldMemory.saveInteraction(verb, outcome)
+    this.coldMemory.saveInteraction(verb, outcome, userId)
 
     // 11. Persist Emotion State
     this.coldMemory.saveEmotions(this.emotionEngine.getStateForPersistence())
@@ -334,5 +342,22 @@ export class Spirit {
    */
   getMemories(): import('./types').NarrativeEvent[] {
     return this.narrativeMemory.getMostSignificant(10)
+  }
+
+  /**
+   * Get total spiritual state for synchronization
+   */
+  getState() {
+    return {
+      emotions: this.emotionEngine.getCurrentState(),
+      maintenance: this.maintenanceEngine.getState(),
+      cognitive: {
+        xp: this.cognitiveEngine.getXP(),
+        clusters: this.cognitiveEngine.getClusters(),
+        plasticity: this.cognitiveEngine.getPlasticity(),
+      },
+      mutterings: this.getMutterings(),
+      memories: this.getMemories(),
+    }
   }
 }

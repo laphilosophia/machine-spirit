@@ -30,16 +30,13 @@
     "resolveJsonModule": true
   },
   "include": [
-    "forge/**/*.ts",
-    "daemon/**/*.ts",
-    "chapel/**/*.ts",
-    "shrine/**/*.ts",
-    "testaments/**/*.ts",
+    "kernel/**/*.ts",
     "scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
+    "altar",
     "**/*.spec.ts"
   ]
 }

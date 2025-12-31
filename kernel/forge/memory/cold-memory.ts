@@ -29,6 +29,7 @@ export class ColdMemory {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS interactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT,
         input TEXT,
         outcome TEXT,
         timestamp INTEGER
@@ -134,11 +135,28 @@ export class ColdMemory {
     this.db.exec(`INSERT OR IGNORE INTO cognitive_profile (id) VALUES (1)`)
   }
 
-  saveInteraction(input: string, outcome: string) {
+  saveInteraction(input: string, outcome: string, userId?: string) {
     const stmt = this.db.prepare(
-      'INSERT INTO interactions (input, outcome, timestamp) VALUES (?, ?, ?)'
+      'INSERT INTO interactions (user_id, input, outcome, timestamp) VALUES (?, ?, ?, ?)'
     )
-    stmt.run(input, outcome, Date.now())
+    stmt.run(userId || null, input, outcome, Date.now())
+
+    // Auto-prune interactions to keep the DB lean (e.g., keep last 5000)
+    this.pruneInteractions(5000)
+  }
+
+  private pruneInteractions(limit: number) {
+    const countRow = this.db.prepare('SELECT COUNT(*) as count FROM interactions').get() as {
+      count: number
+    }
+    if (countRow.count > limit) {
+      const toDelete = countRow.count - limit
+      this.db
+        .prepare(
+          'DELETE FROM interactions WHERE id IN (SELECT id FROM interactions ORDER BY id ASC LIMIT ?)'
+        )
+        .run(toDelete)
+    }
   }
 
   saveScar(scar: Scar) {
