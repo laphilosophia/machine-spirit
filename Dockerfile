@@ -48,8 +48,8 @@ ENV DB_PATH=/data/soul.db
 
 EXPOSE 3000 3001
 
-# Start script
-RUN echo 'node dist/kernel/servitor/index.js & cd altar && ./node_modules/.bin/next start' > start.sh
+# Start script - Servitor on 3001, Altar on 3000
+RUN echo 'PORT=3001 node dist/kernel/servitor/index.js & cd altar && ./node_modules/.bin/next start' > start.sh
 RUN chmod +x start.sh
 
 CMD ["sh", "start.sh"]
