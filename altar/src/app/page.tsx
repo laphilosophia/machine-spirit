@@ -49,7 +49,8 @@ export default function WebAltar() {
   useEffect(() => {
     const fetchState = async () => {
       try {
-        const res = await fetch("http://localhost:3001/state");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        const res = await fetch(`${apiUrl}/state`);
         if (!res.ok) throw new Error("Servitor offline");
         const data = await res.json();
 
@@ -99,7 +100,8 @@ export default function WebAltar() {
     setInteractions((prev) => [...prev, userMsg]);
 
     try {
-      const res = await fetch("http://localhost:3001/interact", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const res = await fetch(`${apiUrl}/interact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input, userId: operatorId }),
@@ -142,7 +144,8 @@ export default function WebAltar() {
     if (!operatorId) return;
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:3001/maintain", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const res = await fetch(`${apiUrl}/maintain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ritual, userId: operatorId }),

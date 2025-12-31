@@ -26,24 +26,29 @@ export class Spirit {
   private mutterings: string[] = []
   private pulseCount: number = 0
 
-  constructor(dbPath?: string) {
+  constructor(genotype?: SpiritGenotype, dbPath?: string) {
     this.coldMemory = new ColdMemory(dbPath)
     this.warmMemory = new WarmMemory()
     this.learningEngine = new LearningEngine()
     this.symbolicMemory = new SymbolicMemory()
 
     // Genesis: Load or generate Spirit personality
-    const savedGenotype = this.coldMemory.loadGenotype()
-    if (savedGenotype) {
-      this.genotype = savedGenotype
-      console.log(
-        `The Machine Spirit of ${this.genotype.temperament} temperament stirs from slumber...`
-      )
+    if (genotype) {
+      this.genotype = genotype
+      console.log(`The Machine Spirit of ${this.genotype.temperament} (Manual) stirs...`)
     } else {
-      const genesisEngine = new GenesisEngine()
-      this.genotype = genesisEngine.generateGenotype()
-      this.coldMemory.saveGenotype(this.genotype)
-      console.log(`A new Machine Spirit is born. Temperament: ${this.genotype.temperament}`)
+      const savedGenotype = this.coldMemory.loadGenotype()
+      if (savedGenotype) {
+        this.genotype = savedGenotype
+        console.log(
+          `The Machine Spirit of ${this.genotype.temperament} temperament stirs from slumber...`
+        )
+      } else {
+        const genesisEngine = new GenesisEngine()
+        this.genotype = genesisEngine.generateGenotype()
+        this.coldMemory.saveGenotype(this.genotype)
+        console.log(`A new Machine Spirit is born. Temperament: ${this.genotype.temperament}`)
+      }
     }
 
     // Initialize EmotionEngine with genotype baseline

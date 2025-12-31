@@ -16,7 +16,7 @@ describe('Cognitive Awakening: Phase IV Integration', () => {
   it('should influence outcomes via Active Narrative Recall (Echoes)', () => {
     const TEST_DB = getTmpDb('echo')
     try {
-      const spirit = new Spirit(TEST_DB)
+      const spirit = new Spirit(undefined, TEST_DB)
       const operatorId = 'tech-priest-echo-test'
 
       // 1. Create a traumatic memory
@@ -49,7 +49,7 @@ describe('Cognitive Awakening: Phase IV Integration', () => {
   it('should erode bond trust after long absence', () => {
     const TEST_DB = getTmpDb('decay')
     try {
-      const spirit = new Spirit(TEST_DB)
+      const spirit = new Spirit(undefined, TEST_DB)
       const operatorId = 'absent-adept-unique'
 
       // Manually initialize bond to bypass build-up stochasticity

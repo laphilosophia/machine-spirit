@@ -11,7 +11,7 @@ app.use(cors())
 app.use(express.json())
 
 // The Machine-Spirit Instance
-const spirit = new Spirit()
+const spirit = new Spirit(undefined, process.env.DB_PATH)
 
 // Background Pulse
 setInterval(() => {

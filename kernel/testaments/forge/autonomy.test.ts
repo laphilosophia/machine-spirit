@@ -16,7 +16,7 @@ describe('Cognitive Awakening: Phase V Autonomy', () => {
 
   it('should generate internal mutterings during pulse', () => {
     const TEST_DB = getTmpDb()
-    const spirit = new Spirit(TEST_DB)
+    const spirit = new Spirit(undefined, TEST_DB)
 
     // Simulate high anger to trigger mutterings
     // @ts-ignore
@@ -35,7 +35,7 @@ describe('Cognitive Awakening: Phase V Autonomy', () => {
 
   it('should consolidate memories during dream cycles', () => {
     const TEST_DB = getTmpDb()
-    const spirit = new Spirit(TEST_DB)
+    const spirit = new Spirit(undefined, TEST_DB)
 
     // 1. Create memories with different verbs to bypass duplicate prevention
     const triggerVerbs = ['reboot', 'purge', 'kill', 'delete', 'format']
@@ -61,7 +61,7 @@ describe('Cognitive Awakening: Phase V Autonomy', () => {
 
   it('should trigger LOCKOUT outcome in extreme states', () => {
     const TEST_DB = getTmpDb()
-    const spirit = new Spirit(TEST_DB)
+    const spirit = new Spirit(undefined, TEST_DB)
 
     // Simulate absolute fury
     // @ts-ignore
