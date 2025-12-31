@@ -80,7 +80,7 @@ app.post('/interact', async (req, res): Promise<void> => {
   }
 })
 
-app.listen(port, () => {
-  console.log(`[SERVITOR] Bridge established at http://localhost:${port}`)
+app.listen(Number(port), '0.0.0.0', () => {
+  console.log(`[SERVITOR] Bridge established at http://0.0.0.0:${port}`)
   console.log(`[SERVITOR] The Machine Spirit awaits at the Web Altar.`)
 })
