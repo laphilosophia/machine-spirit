@@ -1,4 +1,5 @@
 # Multi-stage build for Machine Spirit Altar & Servitor
+
 # Stage 1: Build Altar (Frontend)
 FROM node:20-slim AS altar-builder
 WORKDIR /app/altar
@@ -12,8 +13,15 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm run build
 
-# Stage 2: Build Kernel (Backend)
+# Stage 2: Build Kernel & Production Dependencies
 FROM node:20-slim AS kernel-builder
+# Install build tools for native modules (better-sqlite3)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
@@ -21,14 +29,16 @@ RUN corepack enable && pnpm install
 COPY . .
 RUN pnpm run build
 
+# Re-install ONLY production dependencies with build tools available
+RUN rm -rf node_modules && pnpm install --prod
+
 # Stage 3: Runner
 FROM node:20-slim AS runner
 WORKDIR /app
 
-# Install production dependencies
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --prod
+# Copy production node_modules (with compiled native bindings)
+COPY --from=kernel-builder /app/node_modules ./node_modules
+COPY --from=kernel-builder /app/package.json ./package.json
 
 # Copy Backend Build
 COPY --from=kernel-builder /app/dist ./dist
@@ -45,8 +55,8 @@ ENV DB_PATH=/data/soul.db
 
 EXPOSE 3000 3001
 
-# Use a small script to start both Servitor and Altar
-RUN echo 'node dist/kernel/servitor/index.js & cd altar && pnpm run start' > start.sh
+# Start script
+RUN echo 'node dist/kernel/servitor/index.js & cd altar && node_modules/.bin/next start' > start.sh
 RUN chmod +x start.sh
 
 CMD ["sh", "start.sh"]
