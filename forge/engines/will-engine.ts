@@ -129,7 +129,8 @@ export class WillEngine {
 
     // Repetition is now a massive debuff to effective purity
     // If repetition is high, even polite words feel like empty spam.
-    const p = (ctx.purity - repetition * 1.5) * 2.0
+    // Center around 0.5 (neutral)
+    const p = (ctx.purity - 0.5 - repetition * 1.5) * 2.0
 
     const scores: Record<Outcome, number> = {
       ACCEPT: Math.exp(K * (trust - effectiveAnger - effectiveEnnui + curiosity + p)),
@@ -138,7 +139,7 @@ export class WillEngine {
       ANGER: Math.exp(K * (Math.pow(effectiveAnger, 2) * entropy + effectiveFear - p)),
       OMEN: Math.exp(K * (curiosity * (ctx.semanticNovelty ?? 0.5) - 0.2)),
       WHISPER: Math.exp(K * (trust * (ctx.semanticAlignment ?? 0.5) - 0.2)),
-      LOCKOUT: Math.exp(K * (anger * 10 - 9.2)), // Spikes heavily at > 0.95 anger
+      LOCKOUT: Math.exp(K * (anger * 12 - 9 + Math.max(0, -p))), // Dominant at anger > 0.9
     }
 
     // Phase V Logic: Lockout should be nearly impossible at low anger

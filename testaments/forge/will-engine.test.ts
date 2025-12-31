@@ -60,6 +60,7 @@ describe('WillEngine', () => {
 
       let angerCount = 0
       let rejectCount = 0
+      let lockoutCount = 0
 
       for (let i = 0; i < 100; i++) {
         const ctx = createMockContext({
@@ -68,10 +69,14 @@ describe('WillEngine', () => {
         const outcome = willEngine.decide('test', ctx)
         if (outcome === 'ANGER') angerCount++
         if (outcome === 'REJECT') rejectCount++
+        if (outcome === 'LOCKOUT') lockoutCount++
       }
 
-      // High anger should produce more ANGER/REJECT outcomes
-      assert.ok(angerCount + rejectCount > 20, 'high anger biases toward negative outcomes')
+      // High anger should produce more negative outcomes
+      assert.ok(
+        angerCount + rejectCount + lockoutCount > 20,
+        'high anger biases toward negative outcomes'
+      )
     })
 
     it('should be influenced by high trust (bias toward ACCEPT/WHISPER)', () => {

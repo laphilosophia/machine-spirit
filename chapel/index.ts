@@ -19,6 +19,9 @@ async function main(): Promise<void> {
     const ritual = parseArgs(process.argv)
     if (ritual.isHeresy) {
       renderHeresy()
+      if (ritual.verb) {
+        spirit.interact(ritual.verb, 0, ritual.semantic, operatorId)
+      }
       return
     }
     if (stdinContent) {
@@ -70,7 +73,14 @@ async function main(): Promise<void> {
     const ritual = parseLine(input)
 
     if (ritual.isHeresy) {
-      renderHeresy()
+      // Heresy MUST be recorded so the Spirit can get angry at the disrespect
+      const outcome = spirit.interact(ritual.verb, 0, ritual.semantic, operatorId)
+
+      if (outcome === 'LOCKOUT') {
+        render(outcome)
+      } else {
+        renderHeresy()
+      }
     } else if (ritual.verb) {
       const { score: purity } = calculatePurity(ritual)
       const outcome = spirit.interact(ritual.verb, purity, ritual.semantic, operatorId)

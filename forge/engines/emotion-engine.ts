@@ -96,22 +96,24 @@ export class EmotionEngine {
     if (outcome) {
       switch (outcome) {
         case 'ANGER':
-          this.state.anger += 0.2
+          this.state.anger += 0.25
           this.state.fear += 0.1
           break
         case 'REJECT':
+          this.state.anger += 0.05 // Being ignored/denied fuels resentment
           this.state.ennui += 0.05
           break
         case 'ACCEPT':
           this.state.trust += 0.05
           this.state.ennui -= 0.05
+          this.state.anger -= 0.02 // Success cools the blood slightly
           break
         case 'SILENCE':
           this.state.ennui += 0.1
           this.state.curiosity -= 0.05
           break
         case 'LOCKOUT':
-          this.state.anger += 0.3
+          this.state.anger += 0.4
           this.state.ennui += 0.2
           break
       }
