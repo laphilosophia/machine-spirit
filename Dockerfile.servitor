@@ -1,0 +1,24 @@
+# Servitor (Backend API) Dockerfile
+FROM node:20
+
+WORKDIR /app
+
+# Install dependencies with npm (for reliable native module handling)
+COPY package.json ./
+RUN npm install
+
+# Copy source and build
+COPY kernel/ ./kernel/
+COPY tsconfig.json ./
+RUN npm run build
+
+# Install production dependencies only
+RUN rm -rf node_modules && npm install --production
+
+# Ensure data directory for persistent SQLite
+RUN mkdir -p /data && chmod 777 /data
+ENV DB_PATH=/data/soul.db
+
+EXPOSE 3001
+
+CMD ["node", "dist/kernel/servitor/index.js"]

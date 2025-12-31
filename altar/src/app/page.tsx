@@ -51,6 +51,7 @@ export default function WebAltar() {
   useEffect(() => {
     const fetchState = async () => {
       try {
+        // Use relative path - Next.js rewrites will proxy to Servitor
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         const res = await fetch(`${apiUrl}/state`);
         if (!res.ok) throw new Error("Servitor offline");
