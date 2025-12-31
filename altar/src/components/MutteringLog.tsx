@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export function MutteringLog({ mutterings = [] }: { mutterings: string[] }) {
   return (
-    <div className="sacred-glass p-4 h-[300px] overflow-hidden flex flex-col">
+    <div className="sacred-glass p-4 h-28 overflow-hidden flex flex-col">
       <h3 className="text-[10px] text-sacred-brass font-bold mb-3 tracking-[0.2em] uppercase border-b border-sacred-brass/10 pb-1">
         ⟁ NOOSPHERE FEED
       </h3>

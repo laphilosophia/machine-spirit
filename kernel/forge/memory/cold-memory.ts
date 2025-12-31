@@ -129,6 +129,14 @@ export class ColdMemory {
       );
     `)
 
+    // Migration: Ensure user_id column exists in interactions (SPEC-0008 upgrade)
+    const tableInfo = this.db.pragma('table_info(interactions)') as any[]
+    const hasUserId = tableInfo.some((col) => col.name === 'user_id')
+    if (!hasUserId) {
+      console.log('[COLD_MEMORY] Migration: Adding user_id column to interactions table...')
+      this.db.exec('ALTER TABLE interactions ADD COLUMN user_id TEXT')
+    }
+
     // Ensure singleton rows exist
     this.db.exec(`INSERT OR IGNORE INTO emotions (id) VALUES (1)`)
     this.db.exec(`INSERT OR IGNORE INTO learning_state (id) VALUES (1)`)

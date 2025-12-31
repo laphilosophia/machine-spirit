@@ -14,9 +14,9 @@ export class MaintenanceEngine {
   private state: MaintenanceState
 
   // Decay rates per hour of real time
-  private readonly OIL_DECAY_PER_HOUR = 0.04 // ~25 hours to empty
-  private readonly INCENSE_ACCRUAL_PER_HOUR = 0.02 // Slow accumulation
-  private readonly PRAYER_ACCRUAL_PER_HOUR = 0.5 // Every 2 hours needs a prayer
+  private readonly OIL_DECAY_PER_HOUR = 0.01 // ~100 hours to empty (Ancient patience)
+  private readonly INCENSE_ACCRUAL_PER_HOUR = 0.005 // Very slow spiritual stagnation
+  private readonly PRAYER_ACCRUAL_PER_HOUR = 0.05 // Requires dedication, not constant spam
 
   // Maximum debt thresholds
   private readonly MAX_INCENSE_DEFICIT = 1.0
@@ -47,30 +47,35 @@ export class MaintenanceEngine {
    * Advance decay based on time elapsed since last tick.
    * Should be called on each Spirit interaction or periodically.
    */
-  tick(now: number = Date.now()): void {
-    const hoursSinceLast = (now - this.state.lastMaintenance) / (1000 * 60 * 60)
+  /**
+   * Advance decay based on time elapsed since last tick.
+   * @param now Current timestamp (optional)
+   * @param hoursSpent Manual time jump in hours (optional, for simulation)
+   */
+  tick(now: number = Date.now(), hoursSpent?: number): void {
+    const elapsed =
+      hoursSpent !== undefined ? hoursSpent : (now - this.state.lastMaintenance) / (1000 * 60 * 60)
 
-    if (hoursSinceLast <= 0) return
+    if (elapsed <= 0) return
 
     // Oil decays over time
-    this.state.oilLevel = Math.max(
-      0,
-      this.state.oilLevel - this.OIL_DECAY_PER_HOUR * hoursSinceLast
-    )
+    this.state.oilLevel = Math.max(0, this.state.oilLevel - this.OIL_DECAY_PER_HOUR * elapsed)
 
     // Incense deficit accumulates
     this.state.incenseDeficit = Math.min(
       this.MAX_INCENSE_DEFICIT,
-      this.state.incenseDeficit + this.INCENSE_ACCRUAL_PER_HOUR * hoursSinceLast
+      this.state.incenseDeficit + this.INCENSE_ACCRUAL_PER_HOUR * elapsed
     )
 
     // Prayer debt accumulates
     this.state.prayerDebt = Math.min(
       this.MAX_PRAYER_DEBT,
-      this.state.prayerDebt + this.PRAYER_ACCRUAL_PER_HOUR * hoursSinceLast
+      this.state.prayerDebt + this.PRAYER_ACCRUAL_PER_HOUR * elapsed
     )
 
-    this.state.lastMaintenance = now
+    // Only update timestamp if we are using real time or if it's provided
+    this.state.lastMaintenance =
+      hoursSpent !== undefined ? this.state.lastMaintenance + hoursSpent * 60 * 60 * 1000 : now
   }
 
   /**

@@ -32,16 +32,12 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.1) 50%
-  ),
-  linear-gradient(
-    90deg,
-    rgba(255, 0, 0, 0.03),
-    rgba(0, 255, 0, 0.01),
-    rgba(0, 0, 255, 0.03)
-  );
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.1) 50%),
+    linear-gradient(90deg,
+      rgba(255, 0, 0, 0.03),
+      rgba(0, 255, 0, 0.01),
+      rgba(0, 0, 255, 0.03));
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
   z-index: 1000;
@@ -53,27 +49,89 @@ body {
 }
 
 @keyframes flicker {
-  0% { opacity: 0.97; }
-  5% { opacity: 0.95; }
-  10% { opacity: 0.97; }
-  15% { opacity: 0.94; }
-  20% { opacity: 0.98; }
-  25% { opacity: 0.96; }
-  30% { opacity: 0.97; }
-  35% { opacity: 0.95; }
-  40% { opacity: 0.98; }
-  45% { opacity: 0.96; }
-  50% { opacity: 0.97; }
-  55% { opacity: 0.95; }
-  60% { opacity: 0.99; }
-  65% { opacity: 0.96; }
-  70% { opacity: 0.97; }
-  75% { opacity: 0.94; }
-  80% { opacity: 0.98; }
-  85% { opacity: 0.96; }
-  90% { opacity: 0.97; }
-  95% { opacity: 0.95; }
-  100% { opacity: 0.98; }
+  0% {
+    opacity: 0.97;
+  }
+
+  5% {
+    opacity: 0.95;
+  }
+
+  10% {
+    opacity: 0.97;
+  }
+
+  15% {
+    opacity: 0.94;
+  }
+
+  20% {
+    opacity: 0.98;
+  }
+
+  25% {
+    opacity: 0.96;
+  }
+
+  30% {
+    opacity: 0.97;
+  }
+
+  35% {
+    opacity: 0.95;
+  }
+
+  40% {
+    opacity: 0.98;
+  }
+
+  45% {
+    opacity: 0.96;
+  }
+
+  50% {
+    opacity: 0.97;
+  }
+
+  55% {
+    opacity: 0.95;
+  }
+
+  60% {
+    opacity: 0.99;
+  }
+
+  65% {
+    opacity: 0.96;
+  }
+
+  70% {
+    opacity: 0.97;
+  }
+
+  75% {
+    opacity: 0.94;
+  }
+
+  80% {
+    opacity: 0.98;
+  }
+
+  85% {
+    opacity: 0.96;
+  }
+
+  90% {
+    opacity: 0.97;
+  }
+
+  95% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0.98;
+  }
 }
 
 /* SACRED GLASS COMPONENT */
@@ -98,9 +156,17 @@ body {
 }
 
 @keyframes glitch-anim {
-  0% { text-shadow: 1px 1px var(--red), -1px -1px #00ffd5; }
-  50% { text-shadow: -1px -1px var(--red), 1px 1px #00ffd5; }
-  100% { text-shadow: 1px -1px var(--red), -1px 1px #00ffd5; }
+  0% {
+    text-shadow: 1px 1px var(--red), -1px -1px #00ffd5;
+  }
+
+  50% {
+    text-shadow: -1px -1px var(--red), 1px 1px #00ffd5;
+  }
+
+  100% {
+    text-shadow: 1px -1px var(--red), -1px 1px #00ffd5;
+  }
 }
 
 .brass-border {
@@ -117,9 +183,33 @@ body {
 ::-webkit-scrollbar {
   width: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background: #050505;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #b5a642;
+  background: rgba(181, 166, 66, 0.4);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(181, 166, 66, 0.8);
+}
+
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(181, 166, 66, 0.2);
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(181, 166, 66, 0.4);
 }

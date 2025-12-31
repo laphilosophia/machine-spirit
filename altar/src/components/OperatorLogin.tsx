@@ -37,7 +37,7 @@ export function OperatorLogin({ onLogin }: OperatorLoginProps) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="w-full max-w-md sacred-glass p-8 relative overflow-hidden"
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-sacred-gold/40 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-sacred-gold/40 to-transparent" />
 
         <div className="flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-full border border-sacred-brass/30 flex items-center justify-center bg-sacred-brass/5">
@@ -69,7 +69,7 @@ export function OperatorLogin({ onLogin }: OperatorLoginProps) {
                 className="w-full bg-black/60 border border-sacred-brass/20 p-4 text-sacred-gold font-mono text-sm tracking-wider focus:outline-none focus:border-sacred-gold/60 transition-colors placeholder:text-sacred-brass/20 uppercase"
                 autoFocus
               />
-              <div className="absolute bottom-0 left-0 h-[1px] bg-sacred-gold/40 w-0 transition-all duration-500 group-focus-within:w-full" />
+              <div className="absolute bottom-0 left-0 h-px bg-sacred-gold/40 w-0 transition-all duration-500 group-focus-within:w-full" />
             </div>
 
             <button

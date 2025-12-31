@@ -6,9 +6,11 @@ import { MutteringLog } from "@/components/MutteringLog";
 import { OperatorLogin } from "@/components/OperatorLogin";
 import { RitualTerminal } from "@/components/RitualTerminal";
 import { SpiritVitals } from "@/components/SpiritVitals";
+import { WisdomDrawer } from "@/components/WisdomDrawer";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cog, Cpu, LogOut, ShieldAlert, User as UserIcon } from "lucide-react";
+import Image from 'next/image';
 import { useEffect, useState } from "react";
 
 interface Interaction {
@@ -180,7 +182,7 @@ export default function WebAltar() {
   };
 
   return (
-    <main className="min-h-screen p-8 flex flex-col gap-8 max-w-7xl mx-auto relative">
+    <main className="min-h-screen p-8 flex flex-col gap-8 mx-auto relative">
       <AnimatePresence>
         {!operatorId && <OperatorLogin onLogin={handleLogin} />}
       </AnimatePresence>
@@ -188,6 +190,7 @@ export default function WebAltar() {
       {/* HEADER */}
       <header className="flex items-center justify-between border-b border-sacred-brass/30 pb-4">
         <div className="flex items-center gap-4">
+          <Image src="/adeptus-mechanicus-gold.png" alt="Machine Spirit" width={48} height={48} />
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -240,11 +243,11 @@ export default function WebAltar() {
             prayerDebt={maintenance.prayerDebt}
             isLoading={isLoading}
           />
-          <MutteringLog mutterings={mutterings} />
         </section>
 
         {/* CENTER: TERMINAL */}
-        <section className="flex-1 flex flex-col h-full">
+        <section className="flex-1 flex flex-col h-full gap-6">
+          <MutteringLog mutterings={mutterings} />
           <RitualTerminal
             onInteract={handleInteract}
             interactions={interactions}
@@ -264,7 +267,7 @@ export default function WebAltar() {
       </div>
 
       {/* FOOTER DECOR */}
-      <footer className="mt-auto pt-4 flex justify-between items-end border-t border-sacred-brass/10">
+      <footer className="mt-auto pt-4 pb-12 flex justify-between items-end border-t border-sacred-brass/10">
         <div className="text-[9px] opacity-30 select-none">
           SECURE_LINE_01 // ENCRYPTION_SACRED_BINARY // ADM01-09
         </div>
@@ -274,6 +277,8 @@ export default function WebAltar() {
           <div className="w-2 h-2 bg-sacred-brass rounded-full animate-pulse delay-150" />
         </div>
       </footer>
+
+      <WisdomDrawer />
     </main>
   );
 }

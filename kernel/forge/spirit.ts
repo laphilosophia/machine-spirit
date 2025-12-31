@@ -278,12 +278,11 @@ export class Spirit {
    * Represents the passage of internal time and emergent behaviors.
    */
   pulse(dtHours: number = 1.0): void {
-    const now = Date.now() + dtHours * 60 * 60 * 1000
     this.pulseCount++
 
-    // 1. Physical & Emotional Decay
-    this.maintenanceEngine.tick(now)
-    this.emotionEngine.decay()
+    // 1. Physical & Emotional Decay (Explicitly scaled by dtHours)
+    this.maintenanceEngine.tick(undefined, dtHours)
+    this.emotionEngine.decay(dtHours)
 
     // 2. Introspection: The Spirit "Thinks"
     const state = this.emotionEngine.getCurrentState()

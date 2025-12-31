@@ -24,6 +24,7 @@ export function RitualTerminal({
 }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -31,11 +32,37 @@ export function RitualTerminal({
     }
   }, [interactions]);
 
+  // Persistent Focus Logic
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      // Small delay to check if focus moved to something else intentionally
+      setTimeout(() => {
+        if (
+          document.activeElement?.tagName !== "INPUT" &&
+          document.activeElement?.tagName !== "BUTTON" &&
+          document.activeElement?.tagName !== "TEXTAREA"
+        ) {
+          inputRef.current?.focus();
+        }
+      }, 0);
+    };
+
+    window.addEventListener("click", handleGlobalClick);
+    inputRef.current?.focus();
+
+    return () => window.removeEventListener("click", handleGlobalClick);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     onInteract(input);
     setInput("");
+
+    // Ensure focus stays after submit
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 10);
   };
 
   return (
@@ -52,7 +79,7 @@ export function RitualTerminal({
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 font-mono text-sm space-y-4 scrollbar-hide"
+        className="flex-1 overflow-y-auto p-4 font-mono text-sm space-y-4 scrollbar-hide max-h-120"
       >
         <AnimatePresence initial={false}>
           {interactions.map((msg) => (
@@ -117,6 +144,7 @@ export function RitualTerminal({
         <div className="flex items-center gap-2 bg-black/60 border border-sacred-brass/30 p-2 focus-within:border-sacred-gold transition-colors">
           <span className="text-sacred-brass text-xs opacity-50 px-1">spirit &gt;</span>
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -126,6 +154,10 @@ export function RitualTerminal({
             className="flex-1 bg-transparent border-none outline-none text-sacred-gold text-sm placeholder:opacity-20"
             placeholder="Type ritual invocation..."
           />
+        </div>
+        <div className="mt-2 flex justify-between items-center text-[8px] uppercase tracking-widest opacity-30 px-1">
+          <span>// ENTER TO SUBMIT SUPPLICATION //</span>
+          <span className="animate-pulse italic">++ Guidance Required? Expand the Codice below ++</span>
         </div>
       </form>
     </div>

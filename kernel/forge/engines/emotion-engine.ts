@@ -125,14 +125,19 @@ export class EmotionEngine {
 
   /**
    * Passive decay/drift over time (called by Daemon or Loop)
+   * @param dtHours Simulated time elapsed in hours
    */
-  decay(): void {
-    // Anger fades slowly
-    this.state.anger *= 0.95
+  decay(dtHours: number = 1.0): void {
+    // Anger fades based on time
+    const angerCooling = Math.pow(0.98, dtHours)
+    this.state.anger *= angerCooling
+
     // Fear fades quickly
-    this.state.fear *= 0.9
-    // Ennui grows slowly if idle
-    this.state.ennui += 0.01
+    const fearCooling = Math.pow(0.9, dtHours)
+    this.state.fear *= fearCooling
+
+    // Ennui grows very slowly if idle (Ancient spirits are patient)
+    this.state.ennui += 0.002 * dtHours
 
     this.clamp()
   }

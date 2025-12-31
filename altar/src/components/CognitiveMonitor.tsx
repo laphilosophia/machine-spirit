@@ -69,7 +69,7 @@ export function CognitiveMonitor({
             {/* Bias Gauge */}
             <div className="h-1.5 w-full bg-black/60 border border-white/5 relative flex items-center">
               {/* Neutral Center Mark */}
-              <div className="absolute left-1/2 top-0 h-full w-[1px] bg-white/20 z-10" />
+              <div className="absolute left-1/2 top-0 h-full w-px bg-white/20 z-10" />
 
               <motion.div
                 initial={false}

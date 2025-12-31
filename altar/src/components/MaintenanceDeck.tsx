@@ -74,7 +74,7 @@ export function MaintenanceDeck({
             </div>
 
             {/* Hover Glow Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-sacred-brass/5 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-r from-transparent via-sacred-brass/5 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none" />
           </button>
         ))}
       </div>
