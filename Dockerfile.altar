@@ -30,6 +30,8 @@ COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 
+# Railway provides PORT env variable
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+# Use shell form to expand $PORT
+CMD ["sh", "-c", "./node_modules/.bin/next start -p ${PORT:-3000}"]
