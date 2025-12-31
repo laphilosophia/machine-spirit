@@ -55,9 +55,9 @@ export class WarmMemory {
   calculateRepetitionScore(input: string): number {
     if (this.recentInputs.length === 0) return 0
 
-    const matches = this.recentInputs.filter((i) => i === input).length
-    // 1 match = 0 (it's this one), 2 matches = 0.2, 5 matches = 1.0
-    return Math.min(1.0, (matches - 1) * 0.2)
+    const matches = this.recentInputs.filter((i) => i === input || i.includes(input)).length
+    // 1 match = 0, 10 matches = 1.0 (more gradual fatigue)
+    return Math.min(1.0, (matches - 1) * 0.1)
   }
 
   getSnapshot(): { repetitionScore: number; lastOutcome?: Outcome; recentPurities: number[] } {

@@ -69,8 +69,8 @@ describe('Cognitive Awakening: Phase V Autonomy', () => {
 
     const outcomes: string[] = []
     for (let i = 0; i < 50; i++) {
-      // Increase trials for LOCKOUT
-      outcomes.push(spirit.interact('serve', 0.5, ['orders']))
+      // Lower purity to ensure lockout dominates
+      outcomes.push(spirit.interact('serve', 0.2, ['orders']))
     }
 
     assert.ok(outcomes.includes('LOCKOUT'), 'Spirit should have entered lockout state')

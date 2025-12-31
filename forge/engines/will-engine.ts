@@ -117,33 +117,35 @@ export class WillEngine {
     const purityTrend = trajectory?.purityTrend || 0
 
     // High repetition breeds boredom and frustration
-    const effectiveEnnui = Math.min(1, ennui + repetition * 0.3)
-    const effectiveAnger = Math.min(1, anger + repetition * 0.1)
+    const effectiveEnnui = Math.min(1, ennui + repetition * 0.8)
+    const effectiveAnger = Math.min(1, anger + repetition * 0.4)
 
     // Sloppy trajectory (negative trend) spikes fear and ennui
     const effectiveFear = Math.min(1, e.fear + (purityTrend < -0.2 ? 0.2 : 0))
 
-    // Raw scores per SPEC-0002 (with Phase IV effective modifiers)
+    // Raw scores using exponential scaling to peak the distribution (Softmax-like)
+    // Intensity multiplier (K) determines how "deterministic" the spirit is.
+    const K = 5.0
+
+    // Repetition is now a massive debuff to effective purity
+    // If repetition is high, even polite words feel like empty spam.
+    const p = (ctx.purity - repetition * 1.5) * 2.0
+
     const scores: Record<Outcome, number> = {
-      ACCEPT: this.sigmoid(trust - effectiveAnger - effectiveEnnui + curiosity + ctx.purity),
-      REJECT: this.sigmoid(effectiveAnger + effectiveEnnui - ctx.purity),
-      SILENCE: this.sigmoid(Math.pow(effectiveEnnui, 2)),
-      ANGER: this.sigmoid(Math.pow(effectiveAnger, 2) * entropy + effectiveFear),
-      OMEN: this.sigmoid(curiosity * (ctx.semanticNovelty ?? 0.5)),
-      WHISPER: this.sigmoid(trust * (ctx.semanticAlignment ?? 0.5)),
-      LOCKOUT: this.sigmoid(anger * 10 - 9), // Spikes only at extremely high anger (> 0.85)
+      ACCEPT: Math.exp(K * (trust - effectiveAnger - effectiveEnnui + curiosity + p)),
+      REJECT: Math.exp(K * (effectiveAnger + effectiveEnnui - p)),
+      SILENCE: Math.exp(K * (Math.pow(effectiveEnnui, 2) - 0.5)),
+      ANGER: Math.exp(K * (Math.pow(effectiveAnger, 2) * entropy + effectiveFear - p)),
+      OMEN: Math.exp(K * (curiosity * (ctx.semanticNovelty ?? 0.5) - 0.2)),
+      WHISPER: Math.exp(K * (trust * (ctx.semanticAlignment ?? 0.5) - 0.2)),
+      LOCKOUT: Math.exp(K * (anger * 10 - 9.2)), // Spikes heavily at > 0.95 anger
     }
+
+    // Phase V Logic: Lockout should be nearly impossible at low anger
+    if (anger < 0.8) scores.LOCKOUT = 0
 
     // Normalize to sum = 1
     return this.normalize(scores)
-  }
-
-  /**
-   * Standard Sigmoid Function
-   * Maps (-inf, +inf) -> (0, 1)
-   */
-  private sigmoid(x: number): number {
-    return 1 / (1 + Math.exp(-x))
   }
 
   /**

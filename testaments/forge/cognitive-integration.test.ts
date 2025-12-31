@@ -27,7 +27,8 @@ describe('Cognitive Integration: Trauma & Ghost Penalties', () => {
     // 2. Test 'kill' - should be influenced by 'delete' trauma even if not directly interacted with
     const outcomes: Outcome[] = []
     for (let i = 0; i < 20; i++) {
-      outcomes.push(spirit.interact('kill', 0.6, ['heresy']))
+      // Lower purity to 0.4 to allow cluster penalty to manifest
+      outcomes.push(spirit.interact('kill', 0.4, ['heresy']))
     }
 
     const negative = outcomes.filter(

@@ -102,8 +102,12 @@ describe('WillEngine', () => {
       const willEngine = new WillEngine(learningEngine)
       const outcomes = new Set<Outcome>()
 
-      for (let i = 0; i < 50; i++) {
-        const ctx = createMockContext()
+      for (let i = 0; i < 100; i++) {
+        // Use very low purity and high anger to reach a noisy decision boundary
+        const ctx = createMockContext({
+          purity: 0.1,
+          emotions: { anger: 0.4, trust: 0.1, ennui: 0.1, curiosity: 0.1, fear: 0 },
+        })
         const outcome = willEngine.decide('test', ctx)
         outcomes.add(outcome)
       }

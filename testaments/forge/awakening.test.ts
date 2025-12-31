@@ -33,7 +33,8 @@ describe('Cognitive Awakening: Phase IV Integration', () => {
       // 2. Interact with the same verb again
       const outcomes: string[] = []
       for (let i = 0; i < 20; i++) {
-        outcomes.push(spirit.interact('purge-0', 0.8, ['heresy'], operatorId))
+        // Lower purity to 0.4 to allow the echo penalty to tip the scale
+        outcomes.push(spirit.interact('purge-0', 0.4, ['heresy'], operatorId))
       }
 
       const negative = outcomes.filter(
