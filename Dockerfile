@@ -1,36 +1,37 @@
 # Multi-stage build for Machine Spirit Altar & Servitor
 
-# Stage 1: Build Altar (Frontend)
+# Stage 1: Build Altar (Frontend) - pnpm is fine here, no native deps
 FROM node:20 AS altar-builder
 WORKDIR /app/altar
 COPY altar/package*.json ./
-COPY pnpm-lock.yaml ../
+COPY altar/pnpm-lock.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile
 COPY altar/ .
-COPY kernel/ ../kernel/
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm run build
-# Prepare production-only node_modules with hoisted linker (for portability)
-RUN rm -rf node_modules && pnpm install --prod --frozen-lockfile --config.node-linker=hoisted
+# Prepare production deps
+RUN rm -rf node_modules && pnpm install --prod --frozen-lockfile
 
-# Stage 2: Build Kernel (Backend)
+# Stage 2: Build Kernel (Backend) - Use npm for reliable native module handling
 FROM node:20 AS kernel-builder
 WORKDIR /app
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
-COPY . .
-RUN pnpm run build
-# Prepare production-only node_modules with hoisted linker (for portability)
-RUN rm -rf node_modules && pnpm install --prod --frozen-lockfile --config.node-linker=hoisted
+# Convert pnpm-lock to package-lock for npm (or just use package.json)
+COPY package.json ./
+# Install all deps with npm (compiles native modules correctly)
+RUN npm install
+COPY kernel/ ./kernel/
+COPY tsconfig.json ./
+RUN npm run build
+# Rebuild with production only
+RUN rm -rf node_modules && npm install --production
 
 # Stage 3: Runner
 FROM node:20-slim AS runner
 WORKDIR /app
 
-# Copy Backend Build and production node_modules
+# Copy Backend Build and production node_modules (npm-based, flat structure)
 COPY --from=kernel-builder /app/node_modules ./node_modules
 COPY --from=kernel-builder /app/dist ./dist
 COPY --from=kernel-builder /app/package.json ./package.json
