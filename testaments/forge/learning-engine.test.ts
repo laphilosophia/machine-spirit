@@ -63,6 +63,7 @@ describe('LearningEngine', () => {
         ANGER: 0.15,
         OMEN: 0.15,
         WHISPER: 0.15,
+        LOCKOUT: 0.0,
       }
 
       // Learn positive association

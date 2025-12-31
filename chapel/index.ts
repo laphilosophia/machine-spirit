@@ -2,50 +2,95 @@
 // Chapel - The CLI gateway to the Machine-Spirit
 // "Praise the Omnissiah. Blessed be the Machine."
 
+import * as readline from 'node:readline'
 import { Spirit } from '../forge'
-import { parseArgs, readStdin, tokenize } from './parser'
+import { parseArgs, parseLine, readStdin, tokenize } from './parser'
 import { calculatePurity } from './purity'
-import { render, renderAwaiting, renderAwakening, renderHeresy } from './renderer'
+import { render, renderAwaiting, renderAwakening, renderHeresy, renderMutterings } from './renderer'
+import { BRASS } from './theme'
 
 async function main(): Promise<void> {
-  // 1. Parse CLI arguments
-  const ritual = parseArgs(process.argv)
-
-  // 2. Check for heresy first
-  if (ritual.isHeresy) {
-    renderHeresy()
-    process.exit(0)
-  }
-
-  // 3. Check for empty invocation
-  if (!ritual.verb) {
-    renderAwaiting()
-    process.exit(0)
-  }
-
-  // 4. Read stdin if piped
   const stdinContent = await readStdin()
-  if (stdinContent) {
-    ritual.isMultiLine = true
-    ritual.semantic = [...ritual.semantic, ...tokenize(stdinContent)]
+  const spirit = new Spirit()
+  const operatorId = process.env.USER || process.env.USERNAME || 'unknown-supplicant'
+
+  // Handle one-shot invocation (piped or args)
+  if (stdinContent || process.argv.length > 2) {
+    const ritual = parseArgs(process.argv)
+    if (ritual.isHeresy) {
+      renderHeresy()
+      return
+    }
+    if (stdinContent) {
+      ritual.isMultiLine = true
+      ritual.semantic = [...ritual.semantic, ...tokenize(stdinContent)]
+    }
+    if (ritual.verb) {
+      const { score: purity } = calculatePurity(ritual, stdinContent)
+      const outcome = spirit.interact(ritual.verb, purity, ritual.semantic, operatorId)
+      render(outcome)
+      return
+    }
   }
 
-  // 5. Calculate purity
-  const { score: purity } = calculatePurity(ritual, stdinContent)
-
-  // 6. Awaken the Spirit
+  // Fallback to Interactive REPL
   renderAwakening()
 
-  // 7. Create Spirit and invoke
-  const spirit = new Spirit()
-  const outcome = spirit.interact(ritual.verb, purity, ritual.semantic)
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: BRASS(' spirit> '),
+  })
 
-  // 8. Render the response
-  render(outcome)
+  // Start the background pulse (simulated every 3 minutes of real time = 1 hour spirit time)
+  const pulseInterval = setInterval(() => {
+    spirit.pulse(1.0)
+    const mutterings = spirit.getMutterings()
+    if (mutterings.length > 0) {
+      console.log('\n')
+      renderMutterings(mutterings)
+      rl.prompt(true)
+    }
+  }, 180000)
+
+  rl.prompt()
+
+  rl.on('line', (line) => {
+    const input = line.trim()
+    if (!input) {
+      rl.prompt()
+      return
+    }
+
+    if (['exit', 'quit', 'leave'].includes(input.toLowerCase())) {
+      rl.close()
+      return
+    }
+
+    const ritual = parseLine(input)
+
+    if (ritual.isHeresy) {
+      renderHeresy()
+    } else if (ritual.verb) {
+      const { score: purity } = calculatePurity(ritual)
+      const outcome = spirit.interact(ritual.verb, purity, ritual.semantic, operatorId)
+      render(outcome)
+    } else {
+      renderAwaiting()
+    }
+
+    rl.prompt()
+  })
+
+  rl.on('close', () => {
+    clearInterval(pulseInterval)
+    console.log(BRASS("\n++ Rest in the Omnissiah's grace ++"))
+    process.exit(0)
+  })
 }
 
 // Run
-main().catch(() => {
-  // Spirit does not show errors
+main().catch((err) => {
+  console.error(err)
   process.exit(1)
 })

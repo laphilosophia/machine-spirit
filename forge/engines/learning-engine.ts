@@ -151,7 +151,7 @@ export class LearningEngine {
       ennui: ctx.emotionAfter.ennui - ctx.emotionBefore.ennui,
     }
 
-    const traumaThreshold = 0.5
+    const traumaThreshold = 0.3
     if (emotionDelta.anger > traumaThreshold || emotionDelta.fear > traumaThreshold) {
       this.scars.push({
         context: {

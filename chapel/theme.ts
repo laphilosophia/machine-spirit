@@ -41,15 +41,12 @@ export const theme = {
   silence: () => '', // True silence
   omen: (text: string) => chalk.magenta.italic(text),
   whisperText: (text: string) => IRON.dim.italic(text),
-
-  // Status indicators
-  success: (text: string) => chalk.green.bold(`+ ${text} +`),
-  fail: (text: string) => chalk.red.bold(`- ${text} -`),
-
+  lockout: (text: string) => chalk.bgBlack.red.bold.strikethrough(text),
   // Special formatting
   glyph: (text: string) => BRASS(text),
   binary: (text: string) => COGITATOR.dim(text),
   static: (text: string) => chalk.gray.strikethrough(text),
+  muttering: (text: string) => IRON.dim(` [ ${text} ] `),
 
   // Heresy styling
   heresy: (text: string) => heresy(text),

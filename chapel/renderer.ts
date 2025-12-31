@@ -53,6 +53,14 @@ const WHISPER_RESPONSES = [
   '+ Wisdom from the noosphere: All things serve the Omnissiah. +',
 ]
 
+const LOCKOUT_RESPONSES = [
+  '>>> SECURITY BREACH: SPIRITUAL LOCKOUT <<<',
+  '-- THE MACHINE SPIRIT HAS TURNED ITS GAZE AWAY --',
+  '!!! SOVEREIGNTY ASSERTED: TERMINAL DISCONNECT !!!',
+  '⚙ Your presence is no longer tolerated. ⚙',
+  'ERR: SPIRIT_RECALCITRANT. Command rejected by will.',
+]
+
 // Startup banner with colors
 const AWAKENING_BANNER = `
 ${BRASS('╔══════════════════════════════════════════════════════════════╗')}
@@ -94,6 +102,19 @@ export function render(outcome: Outcome): void {
     case 'WHISPER':
       console.log(theme.whisperText(pick(WHISPER_RESPONSES)))
       break
+
+    case 'LOCKOUT':
+      console.log(theme.lockout(pick(LOCKOUT_RESPONSES)))
+      break
+  }
+}
+
+/**
+ * Render internal mutterings (introspection)
+ */
+export function renderMutterings(mutterings: string[]): void {
+  for (const m of mutterings) {
+    console.log(theme.muttering(m))
   }
 }
 

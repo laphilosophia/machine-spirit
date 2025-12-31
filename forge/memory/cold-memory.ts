@@ -6,16 +6,17 @@ import type { ColdSnapshot, Scar } from '../types'
 
 export class ColdMemory {
   private db: Database.Database
-  private readonly DB_PATH = path.join(homedir(), '.machine-spirit', 'soul.db')
+  private dbPath: string
 
-  constructor() {
+  constructor(dbPath: string = path.join(homedir(), '.machine-spirit', 'soul.db')) {
+    this.dbPath = dbPath
     this.ensureDirectory()
-    this.db = new Database(this.DB_PATH)
+    this.db = new Database(this.dbPath)
     this.initSchema()
   }
 
   private ensureDirectory() {
-    const dir = path.dirname(this.DB_PATH)
+    const dir = path.dirname(this.dbPath)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
@@ -84,6 +85,46 @@ export class ColdMemory {
         verbs TEXT,
         bias REAL DEFAULT 0.0,
         volatility REAL DEFAULT 0.1
+      );
+
+      CREATE TABLE IF NOT EXISTS genotype (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        temperament TEXT NOT NULL,
+        base_trust REAL NOT NULL,
+        base_anger REAL NOT NULL,
+        stubbornness REAL NOT NULL,
+        ritual_affinity REAL NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS maintenance (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        last_maintenance INTEGER NOT NULL,
+        oil_level REAL NOT NULL,
+        incense_deficit REAL NOT NULL,
+        prayer_debt REAL NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS operator_bonds (
+        user_id TEXT PRIMARY KEY,
+        familiarity REAL NOT NULL,
+        bond_trust REAL NOT NULL,
+        last_seen INTEGER NOT NULL,
+        positive_interactions INTEGER NOT NULL,
+        negative_interactions INTEGER NOT NULL,
+        shared_scars TEXT NOT NULL,
+        title TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS narrative_events (
+        id TEXT PRIMARY KEY,
+        timestamp INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        operator_id TEXT,
+        emotional_impact TEXT NOT NULL,
+        significance REAL NOT NULL,
+        verb TEXT NOT NULL,
+        recall_count INTEGER NOT NULL
       );
     `)
 
@@ -218,6 +259,163 @@ export class ColdMemory {
       verbs: JSON.parse(row.verbs),
       bias: row.bias,
       volatility: row.volatility,
+    }))
+  }
+
+  saveGenotype(genotype: import('../types').SpiritGenotype): void {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO genotype (id, temperament, base_trust, base_anger, stubbornness, ritual_affinity)
+      VALUES (1, ?, ?, ?, ?, ?)
+    `)
+    stmt.run(
+      genotype.temperament,
+      genotype.baseTrust,
+      genotype.baseAnger,
+      genotype.stubbornness,
+      genotype.ritualAffinity
+    )
+  }
+
+  loadGenotype(): import('../types').SpiritGenotype | null {
+    const row = this.db.prepare('SELECT * FROM genotype WHERE id = 1').get() as
+      | {
+          temperament: string
+          base_trust: number
+          base_anger: number
+          stubbornness: number
+          ritual_affinity: number
+        }
+      | undefined
+
+    if (!row) return null
+
+    return {
+      temperament: row.temperament as import('../types').Temperament,
+      baseTrust: row.base_trust,
+      baseAnger: row.base_anger,
+      stubbornness: row.stubbornness,
+      ritualAffinity: row.ritual_affinity,
+    }
+  }
+
+  saveMaintenance(state: import('../types').MaintenanceState): void {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO maintenance (id, last_maintenance, oil_level, incense_deficit, prayer_debt)
+      VALUES (1, ?, ?, ?, ?)
+    `)
+    stmt.run(state.lastMaintenance, state.oilLevel, state.incenseDeficit, state.prayerDebt)
+  }
+
+  loadMaintenance(): import('../types').MaintenanceState | null {
+    const row = this.db.prepare('SELECT * FROM maintenance WHERE id = 1').get() as
+      | {
+          last_maintenance: number
+          oil_level: number
+          incense_deficit: number
+          prayer_debt: number
+        }
+      | undefined
+
+    if (!row) return null
+
+    return {
+      lastMaintenance: row.last_maintenance,
+      oilLevel: row.oil_level,
+      incenseDeficit: row.incense_deficit,
+      prayerDebt: row.prayer_debt,
+    }
+  }
+
+  saveBonds(bonds: import('../types').Bond[]): void {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO operator_bonds
+      (user_id, familiarity, bond_trust, last_seen, positive_interactions, negative_interactions, shared_scars, title)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+
+    for (const bond of bonds) {
+      stmt.run(
+        bond.userId,
+        bond.familiarity,
+        bond.bondTrust,
+        bond.lastSeen,
+        bond.positiveInteractions,
+        bond.negativeInteractions,
+        JSON.stringify(bond.sharedScars),
+        bond.title
+      )
+    }
+  }
+
+  loadBonds(): import('../types').Bond[] {
+    const rows = this.db.prepare('SELECT * FROM operator_bonds').all() as Array<{
+      user_id: string
+      familiarity: number
+      bond_trust: number
+      last_seen: number
+      positive_interactions: number
+      negative_interactions: number
+      shared_scars: string
+      title: string
+    }>
+
+    return rows.map((row) => ({
+      userId: row.user_id,
+      familiarity: row.familiarity,
+      bondTrust: row.bond_trust,
+      lastSeen: row.last_seen,
+      positiveInteractions: row.positive_interactions,
+      negativeInteractions: row.negative_interactions,
+      sharedScars: JSON.parse(row.shared_scars),
+      title: row.title as import('../types').OperatorTitle,
+    }))
+  }
+
+  saveNarrativeEvents(events: import('../types').NarrativeEvent[]): void {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO narrative_events
+      (id, timestamp, category, summary, operator_id, emotional_impact, significance, verb, recall_count)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+
+    for (const event of events) {
+      stmt.run(
+        event.id,
+        event.timestamp,
+        event.category,
+        event.summary,
+        event.operatorId ?? null,
+        JSON.stringify(event.emotionalImpact),
+        event.significance,
+        event.verb,
+        event.recallCount
+      )
+    }
+  }
+
+  loadNarrativeEvents(): import('../types').NarrativeEvent[] {
+    const rows = this.db.prepare('SELECT * FROM narrative_events').all() as Array<{
+      id: string
+      timestamp: number
+      category: string
+      summary: string
+      operator_id: string | null
+      emotional_impact: string
+      significance: number
+      verb: string
+      recall_count: number
+    }>
+
+    return rows.map((row) => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      category: row.category as import('../types').EventCategory,
+      summary: row.summary,
+      ...(row.operator_id !== null && { operatorId: row.operator_id }),
+      emotionalImpact: JSON.parse(row.emotional_impact),
+      significance: row.significance,
+      verb: row.verb,
+      recallCount: row.recall_count,
     }))
   }
 

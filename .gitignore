@@ -32,3 +32,6 @@ coverage/
 # Temporary
 tmp/
 temp/
+*.db
+*.db-wal
+*.db-shm

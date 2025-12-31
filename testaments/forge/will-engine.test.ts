@@ -7,7 +7,15 @@ import { LearningEngine } from '../../forge/engines/learning-engine'
 import { WillEngine } from '../../forge/engines/will-engine'
 import type { Outcome, WillContext } from '../../forge/types'
 
-const VALID_OUTCOMES: Outcome[] = ['ACCEPT', 'REJECT', 'SILENCE', 'ANGER', 'OMEN', 'WHISPER']
+const VALID_OUTCOMES: Outcome[] = [
+  'ACCEPT',
+  'REJECT',
+  'SILENCE',
+  'ANGER',
+  'OMEN',
+  'WHISPER',
+  'LOCKOUT',
+]
 
 function createMockContext(overrides: Partial<WillContext> = {}): WillContext {
   return {

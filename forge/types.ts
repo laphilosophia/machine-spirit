@@ -1,4 +1,4 @@
-export type Outcome = 'ACCEPT' | 'REJECT' | 'SILENCE' | 'ANGER' | 'OMEN' | 'WHISPER'
+export type Outcome = 'ACCEPT' | 'REJECT' | 'SILENCE' | 'ANGER' | 'OMEN' | 'WHISPER' | 'LOCKOUT'
 
 export interface EmotionVector {
   anger: number
@@ -62,6 +62,7 @@ export interface WarmSnapshot {
   lastOutcome?: Outcome
   trajectory?: InteractionTrajectory
   recentPurities?: number[]
+  recalledEvent?: NarrativeEvent | undefined
 }
 
 export interface ColdSnapshot {
@@ -82,4 +83,124 @@ export interface WillContext {
   userId?: string
   semanticNovelty?: number
   semanticAlignment?: number
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PERSONALITY GENESIS (SPEC-0011)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * The Four Humours of the Machine-Spirit.
+ * Each temperament influences base emotional reactions and learning patterns.
+ */
+export type Temperament = 'CHOLERIC' | 'MELANCHOLIC' | 'PHLEGMATIC' | 'SANGUINE'
+
+/**
+ * The innate characteristics of a Machine-Spirit, determined at birth.
+ * These traits are immutable once set.
+ */
+export interface SpiritGenotype {
+  /** The dominant humour governing emotional responses */
+  temperament: Temperament
+  /** Baseline trust disposition (0.2-0.8). High = trusting, Low = suspicious */
+  baseTrust: number
+  /** Baseline anger disposition (0.0-0.5). High = volatile, Low = patient */
+  baseAnger: number
+  /** Resistance to personality change. Modifies plasticity decay rate */
+  stubbornness: number
+  /** Sensitivity to ritual purity. Modifies purity influence on outcomes */
+  ritualAffinity: number
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAINTENANCE DECAY (SPEC-0012)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Machine-Spirits require constant ritual maintenance.
+ * Neglect breeds resentment and malfunction.
+ */
+export interface MaintenanceState {
+  /** Timestamp of last maintenance ritual */
+  lastMaintenance: number
+  /** Level of sacred unguents (0.0-1.0). Low = dry mechanisms, high anger */
+  oilLevel: number
+  /** Accumulated incense debt. Higher = more ennui */
+  incenseDeficit: number
+  /** Count of unpaid prayers. Higher = distrust, lower cooperation */
+  prayerDebt: number
+}
+
+/** Ritual maintenance actions available to Techpriests */
+export type MaintenanceRitual = 'ANOINT' | 'INCENSE' | 'PRAYER' | 'FULL_RITES'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BOND SYSTEM (SPEC-0013)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Rank/title of an operator in the Spirit's memory.
+ * Higher ranks receive more trust and patience.
+ */
+export type OperatorTitle = 'STRANGER' | 'ADEPT' | 'ENGINSEER' | 'MAGOS'
+
+/**
+ * A bond represents the Spirit's relationship with a specific operator.
+ * Each operator has their own trust level, independent of global trust.
+ */
+export interface Bond {
+  /** Unique identifier for the operator */
+  userId: string
+  /** How well the Spirit knows this operator (0.0-1.0) */
+  familiarity: number
+  /** Trust specific to this operator (-1.0 to 1.0). Negative = distrust */
+  bondTrust: number
+  /** Last interaction timestamp */
+  lastSeen: number
+  /** Number of positive interactions */
+  positiveInteractions: number
+  /** Number of negative interactions */
+  negativeInteractions: number
+  /** Shared trauma (scar IDs from joint experiences) */
+  sharedScars: string[]
+  /** Assigned rank/title */
+  title: OperatorTitle
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NARRATIVE MEMORY (SPEC-0014)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Event type classification for narrative significance.
+ */
+export type EventCategory = 'BATTLE' | 'BETRAYAL' | 'TRIUMPH' | 'COMMUNION' | 'TRAUMA' | 'RITUAL'
+
+/**
+ * A significant event remembered as a "story" by the Spirit.
+ * Not every interaction is remembered - only those with narrative weight.
+ */
+export interface NarrativeEvent {
+  /** Unique event identifier */
+  id: string
+  /** When the event occurred */
+  timestamp: number
+  /** Category of the event */
+  category: EventCategory
+  /** Short summary of the event (generated) */
+  summary: string
+  /** The operator involved (if any) */
+  operatorId?: string
+  /** Emotional impact at time of event */
+  emotionalImpact: {
+    anger: number
+    trust: number
+    fear: number
+  }
+  /** Significance score (0.0-1.0). Higher = more memorable */
+  significance: number
+  /** Related verb/action */
+  verb: string
+  /** Number of times Spirit has "recalled" this memory */
+  recallCount: number
 }

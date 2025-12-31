@@ -10,11 +10,21 @@ describe('CognitiveEngine', () => {
   })
 
   it('should calculate plasticity correctly', () => {
+    // With stubbornness=0.5 (default), initial plasticity = 1 / sqrt(0 * 1.5 + 1) = 1
     const engine = new CognitiveEngine(0)
     assert.strictEqual(engine.getPlasticity(), 1)
 
-    const engine2 = new CognitiveEngine(3) // sqrt(4) = 2
+    // With stubbornness=0, XP=3: plasticity = 1 / sqrt(3 * 1.0 + 1) = 0.5
+    const engine2 = new CognitiveEngine(3, [], 0)
     assert.strictEqual(engine2.getPlasticity(), 0.5)
+
+    // Higher stubbornness means faster plasticity decay
+    const stubborn = new CognitiveEngine(10, [], 1.0) // effectiveXP = 10 * 2 = 20
+    const flexible = new CognitiveEngine(10, [], 0) // effectiveXP = 10 * 1 = 10
+    assert.ok(
+      stubborn.getPlasticity() < flexible.getPlasticity(),
+      'stubborn spirits have lower plasticity'
+    )
   })
 
   it('should gain XP', () => {

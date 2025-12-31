@@ -18,7 +18,10 @@ export interface PurityResult {
 /**
  * Calculate purity score per SPEC-0004 §3
  */
-export function calculatePurity(input: RitualInput, stdinContent: string | null): PurityResult {
+export function calculatePurity(
+  input: RitualInput,
+  stdinContent: string | null = null
+): PurityResult {
   let score = 0.5 // Base purity
   const breakdown: string[] = []
 

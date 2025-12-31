@@ -1,8 +1,9 @@
 import type { Outcome, WillContext } from '../types'
+import type { BondEngine } from './bond-engine'
 import type { LearningEngine } from './learning-engine'
 
 export class WillEngine {
-  constructor(private learningEngine: LearningEngine) {}
+  constructor(private learningEngine: LearningEngine, private bondEngine?: BondEngine) {}
 
   /**
    * The core decision loop.
@@ -26,7 +27,22 @@ export class WillEngine {
     // 2. Calculate Base Probabilities (from Emotions & Spec 0002)
     let probabilities = this.calculateBaseProbabilities(ctx)
 
-    // 2. Adjust based on Learning Engine (Pavlovian & Context)
+    // 3. Phase IV: Active Narrative Recall (Lingering Echoes)
+    // If a significant negative event (BETRAYAL/TRAUMA) happened with this verb, inject an echo.
+    const relevantEvent = ctx.warm.recalledEvent
+    if (relevantEvent) {
+      if (relevantEvent.category === 'BETRAYAL' || relevantEvent.category === 'TRAUMA') {
+        probabilities.ANGER *= 1.4
+        probabilities.REJECT *= 1.2
+        probabilities.SILENCE *= 1.1
+      } else if (relevantEvent.category === 'TRIUMPH' || relevantEvent.category === 'COMMUNION') {
+        probabilities.ACCEPT *= 1.3
+        probabilities.WHISPER *= 1.2
+      }
+      probabilities = this.normalize(probabilities)
+    }
+
+    // 4. Adjust based on Learning Engine (Pavlovian & Context)
     probabilities = this.learningEngine.adjustOutcomeProbabilities(
       verb,
       ctx.time,
@@ -34,7 +50,7 @@ export class WillEngine {
       probabilities
     )
 
-    // 3. Inject Chaos if things are too predictable (Spec 0009)
+    // 5. Inject Chaos if things are too predictable (Spec 0009)
     if (this.learningEngine.shouldInjectChaos()) {
       probabilities.OMEN *= 2.0
       probabilities.ANGER *= 1.5
@@ -42,7 +58,7 @@ export class WillEngine {
       probabilities = this.normalize(probabilities)
     }
 
-    // 4. Apply Cognitive Generalization (SPEC-0010)
+    // 6. Apply Cognitive Generalization (SPEC-0010)
     const clusters = ctx.cold.clusters || []
     const cluster = clusters.find((c) => c.verbs.includes(verb))
     if (cluster && cluster.bias !== 0) {
@@ -55,7 +71,30 @@ export class WillEngine {
       probabilities = this.normalize(probabilities)
     }
 
-    // 5. Select Outcome (Weighted Random)
+    // 7. Apply Bond Modifiers (SPEC-0013)
+    if (this.bondEngine && ctx.userId) {
+      const trustMod = this.bondEngine.getTrustModifier(ctx.userId)
+      const patienceMod = this.bondEngine.getPatienceModifier(ctx.userId)
+
+      // Trust modifier: positive trust boosts ACCEPT/WHISPER, negative boosts REJECT
+      if (trustMod > 0) {
+        probabilities.ACCEPT *= 1 + trustMod
+        probabilities.WHISPER *= 1 + trustMod * 0.5
+      } else if (trustMod < 0) {
+        probabilities.REJECT *= 1 - trustMod
+        probabilities.ANGER *= 1 - trustMod * 0.5
+      }
+
+      // Patience modifier: reduces ANGER probability for familiar operators
+      probabilities.ANGER *= 1 - patienceMod
+
+      // Lockout is harder to trigger for familiar operators
+      probabilities.LOCKOUT *= 1 - patienceMod * 0.5
+
+      probabilities = this.normalize(probabilities)
+    }
+
+    // 8. Select Outcome (Weighted Random)
     return this.weightedRandomPick(probabilities)
   }
 
@@ -72,18 +111,27 @@ export class WillEngine {
     const ennui = e.ennui
     const curiosity = e.curiosity
 
-    // Use semantic scores from context (default to 0.5 if not provided)
-    const semanticNovelty = ctx.semanticNovelty ?? 0.5
-    const semanticAlignment = ctx.semanticAlignment ?? 0.5
+    // Phase IV: Repetition and Trajectory Influence
+    const repetition = ctx.warm.repetitionScore || 0
+    const trajectory = ctx.warm.trajectory
+    const purityTrend = trajectory?.purityTrend || 0
 
-    // Raw scores per SPEC-0002
+    // High repetition breeds boredom and frustration
+    const effectiveEnnui = Math.min(1, ennui + repetition * 0.3)
+    const effectiveAnger = Math.min(1, anger + repetition * 0.1)
+
+    // Sloppy trajectory (negative trend) spikes fear and ennui
+    const effectiveFear = Math.min(1, e.fear + (purityTrend < -0.2 ? 0.2 : 0))
+
+    // Raw scores per SPEC-0002 (with Phase IV effective modifiers)
     const scores: Record<Outcome, number> = {
-      ACCEPT: this.sigmoid(trust - anger - ennui + curiosity + ctx.purity),
-      REJECT: this.sigmoid(anger + ennui - ctx.purity),
-      SILENCE: this.sigmoid(Math.pow(ennui, 2)),
-      ANGER: this.sigmoid(Math.pow(anger, 2) * entropy),
-      OMEN: this.sigmoid(curiosity * semanticNovelty),
-      WHISPER: this.sigmoid(trust * semanticAlignment),
+      ACCEPT: this.sigmoid(trust - effectiveAnger - effectiveEnnui + curiosity + ctx.purity),
+      REJECT: this.sigmoid(effectiveAnger + effectiveEnnui - ctx.purity),
+      SILENCE: this.sigmoid(Math.pow(effectiveEnnui, 2)),
+      ANGER: this.sigmoid(Math.pow(effectiveAnger, 2) * entropy + effectiveFear),
+      OMEN: this.sigmoid(curiosity * (ctx.semanticNovelty ?? 0.5)),
+      WHISPER: this.sigmoid(trust * (ctx.semanticAlignment ?? 0.5)),
+      LOCKOUT: this.sigmoid(anger * 10 - 9), // Spikes only at extremely high anger (> 0.85)
     }
 
     // Normalize to sum = 1

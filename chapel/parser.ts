@@ -51,6 +51,36 @@ export function parseArgs(args: string[]): RitualInput {
 }
 
 /**
+ * Parse a single line of input for REPL
+ */
+export function parseLine(line: string): RitualInput {
+  const tokens = line.trim().split(/\s+/).filter(Boolean)
+
+  if (tokens.length === 0) {
+    return {
+      verb: '',
+      semantic: [],
+      isHeresy: false,
+      isMultiLine: false,
+      rawInput: '',
+    }
+  }
+
+  const verb = tokens[0]!.toLowerCase()
+  const semantic = tokens.slice(1)
+
+  const isHeresy = FORBIDDEN_VERBS.includes(verb) || verb.startsWith('-')
+
+  return {
+    verb,
+    semantic,
+    isHeresy,
+    isMultiLine: false,
+    rawInput: line,
+  }
+}
+
+/**
  * Read piped stdin content (if available)
  */
 export async function readStdin(): Promise<string | null> {

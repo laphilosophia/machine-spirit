@@ -3,6 +3,7 @@ import type { ConceptCluster, InteractionTrajectory, Outcome } from '../types'
 export class CognitiveEngine {
   private clusters: ConceptCluster[] = []
   private xp: number = 0
+  private stubbornness: number = 0.5
 
   // Default clusters as per SPEC-0010 proposals
   private readonly DEFAULT_CLUSTERS: ConceptCluster[] = [
@@ -17,9 +18,14 @@ export class CognitiveEngine {
     { id: 'INQUIRY_OPS', verbs: ['analyze', 'check', 'view', 'read'], bias: 0, volatility: 0.08 },
   ]
 
-  constructor(initialXP: number = 0, initialClusters: ConceptCluster[] = []) {
+  constructor(
+    initialXP: number = 0,
+    initialClusters: ConceptCluster[] = [],
+    stubbornness: number = 0.5
+  ) {
     this.xp = initialXP
     this.clusters = initialClusters.length > 0 ? initialClusters : [...this.DEFAULT_CLUSTERS]
+    this.stubbornness = stubbornness
   }
 
   /**
@@ -38,9 +44,13 @@ export class CognitiveEngine {
 
   /**
    * Calculates Plasticity based on Experience (SPEC-0010 Eq)
+   * Modified by stubbornness: higher stubbornness = faster plasticity decay
    */
   getPlasticity(): number {
-    return 1 / Math.sqrt(this.xp + 1)
+    // Base formula: 1 / sqrt(XP + 1)
+    // Stubbornness amplifies the decay: multiply XP effect by (1 + stubbornness)
+    const effectiveXP = this.xp * (1 + this.stubbornness)
+    return 1 / Math.sqrt(effectiveXP + 1)
   }
 
   /**
