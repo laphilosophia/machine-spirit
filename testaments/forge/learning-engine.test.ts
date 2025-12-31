@@ -14,6 +14,7 @@ function createMockLearningContext(overrides: Partial<LearningContext> = {}): Le
     outcome: 'ACCEPT',
     emotionBefore: { anger: 0.1, trust: 0.5, ennui: 0.1, curiosity: 0.5, fear: 0 },
     emotionAfter: { anger: 0.1, trust: 0.6, ennui: 0.1, curiosity: 0.5, fear: 0 },
+    xpGained: 0,
     ...overrides,
   }
 }

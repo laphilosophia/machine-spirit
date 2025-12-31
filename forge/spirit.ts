@@ -1,3 +1,4 @@
+import { CognitiveEngine } from './engines/cognitive-engine'
 import { EmotionEngine } from './engines/emotion-engine'
 import { LearningEngine } from './engines/learning-engine'
 import { WillEngine } from './engines/will-engine'
@@ -13,6 +14,7 @@ export class Spirit {
   private willEngine: WillEngine
   private emotionEngine: EmotionEngine
   private symbolicMemory: SymbolicMemory
+  private cognitiveEngine: CognitiveEngine
 
   constructor() {
     this.coldMemory = new ColdMemory()
@@ -33,6 +35,11 @@ export class Spirit {
       this.learningEngine.deserialize(savedLearning)
     }
 
+    // Initialize Cognitive Layer (XP and Clusters)
+    const savedXP = this.coldMemory.getSnapshot().xp || 0
+    const savedClusters = this.coldMemory.loadClusters()
+    this.cognitiveEngine = new CognitiveEngine(savedXP, savedClusters)
+
     this.willEngine = new WillEngine(this.learningEngine)
 
     console.log('The Machine Spirit awakens...')
@@ -46,6 +53,7 @@ export class Spirit {
 
     // 1. Warm Memory Check (Redundancy)
     this.warmMemory.push(verb)
+    this.warmMemory.pushPurity(purity)
     const warmSnapshot = this.warmMemory.getSnapshot()
 
     // 2. Cold Memory Check (Scars)
@@ -62,11 +70,24 @@ export class Spirit {
       this.learningEngine.getAdoptedVocabulary()
     )
 
-    // 5. Construct Context
+    // 5. Construct Cognitive Snapshot
+    const cognitiveSnapshot = {
+      xp: this.cognitiveEngine.getXP(),
+      clusters: this.cognitiveEngine.getClusters(),
+      scars: coldSnapshot.scars,
+      bonds: coldSnapshot.bonds,
+    }
+
+    const trajectory = this.cognitiveEngine.analyzeTrajectory(
+      warmSnapshot.lastOutcome ? [warmSnapshot.lastOutcome] : [],
+      warmSnapshot.recentPurities || []
+    )
+
+    // 6. Construct Context
     const entropy = Math.random() // Placeholder for system entropy
     const context: WillContext = {
-      warm: warmSnapshot,
-      cold: coldSnapshot,
+      warm: { ...warmSnapshot, trajectory },
+      cold: cognitiveSnapshot,
       emotions: this.emotionEngine.getCurrentState(),
       semantic,
       entropy,
@@ -84,21 +105,32 @@ export class Spirit {
     this.emotionEngine.stimulate(purity, outcome)
     this.warmMemory.recordOutcome(outcome)
 
+    const emotionAfter = this.emotionEngine.getCurrentState()
+    const reward = this.learningEngine.computeReward(context.emotions, emotionAfter)
+
+    // 8. Persist new scars to Cold Memory & update Cognitive clusters
+    const newScars = this.learningEngine.getNewScars()
+    let maxScarSeverity = 0
+    for (const scar of newScars) {
+      this.coldMemory.saveScar(scar)
+      maxScarSeverity = Math.max(maxScarSeverity, scar.severity)
+    }
+
+    // Cognitive growth: Gain XP based on interaction and reward
+    const xpGained = Math.ceil(Math.abs(reward) * 10) + 1
+    this.cognitiveEngine.gainXP(xpGained)
+    this.cognitiveEngine.updateClusters(verb, reward, maxScarSeverity)
+
     this.learningEngine.learn({
       verb,
       time: timestamp,
       semantic,
       outcome,
       emotionBefore: context.emotions,
-      emotionAfter: this.emotionEngine.getCurrentState(),
+      emotionAfter,
+      xpGained,
       ...(userId !== undefined && { userId }),
     })
-
-    // 8. Persist new scars to Cold Memory
-    const newScars = this.learningEngine.getNewScars()
-    for (const scar of newScars) {
-      this.coldMemory.saveScar(scar)
-    }
 
     // 9. Persist Interaction
     this.coldMemory.saveInteraction(verb, outcome)
@@ -108,6 +140,10 @@ export class Spirit {
 
     // 11. Persist Learning State
     this.coldMemory.saveLearningState(this.learningEngine.serialize() as string)
+
+    // 12. Persist Cognitive Growth
+    this.coldMemory.saveXP(this.cognitiveEngine.getXP())
+    this.coldMemory.saveClusters(this.cognitiveEngine.getClusters())
 
     return outcome
   }

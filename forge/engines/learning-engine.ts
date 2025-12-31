@@ -19,6 +19,7 @@ export class LearningEngine {
   private readonly STALENESS_INCREASE = 0.1
   private readonly STALENESS_DECAY = -0.05
   private readonly VOCAB_ADOPTION_THRESHOLD = 10
+  private readonly MAX_VOCAB_SIZE = 1000
 
   /**
    * Core learning update after each interaction
@@ -48,11 +49,15 @@ export class LearningEngine {
     keys.forEach((key) => {
       const assoc = this.getOrCreateAssociation(key)
 
+      const reward = this.computeReward(ctx.emotionBefore, ctx.emotionAfter)
+
       switch (ctx.outcome) {
         case 'ACCEPT':
-          assoc.weight = Math.min(1.0, assoc.weight + this.ACCEPT_WEIGHT_GAIN)
+        case 'WHISPER':
+          // Positive reinforcement scaled by reward (emotional stability)
+          assoc.weight = Math.min(1.0, assoc.weight + this.ACCEPT_WEIGHT_GAIN * (1 + reward))
           if (assoc.stress > 0) {
-            assoc.stress = Math.max(0, assoc.stress + this.STRESS_RELIEF)
+            assoc.stress = Math.max(0, assoc.stress + this.STRESS_RELIEF * (1 + reward))
           }
           if (assoc.staleness > 0) {
             assoc.staleness = Math.max(0, assoc.staleness + this.STALENESS_DECAY)
@@ -61,8 +66,11 @@ export class LearningEngine {
 
         case 'REJECT':
         case 'ANGER':
-          assoc.weight = Math.max(-1.0, assoc.weight + this.REJECT_WEIGHT_LOSS)
-          assoc.stress = Math.min(1.0, assoc.stress + this.STRESS_INCREASE)
+          // Negative reinforcement: weight loss is mitigated if the "pain" led to relief
+          // (e.g., lashing out reduced anger)
+          const weightLoss = this.REJECT_WEIGHT_LOSS * (1 - Math.max(0, reward))
+          assoc.weight = Math.max(-1.0, assoc.weight + weightLoss)
+          assoc.stress = Math.min(1.0, assoc.stress + this.STRESS_INCREASE * (1 - reward))
           break
 
         case 'SILENCE':
@@ -111,6 +119,26 @@ export class LearningEngine {
 
       this.vocabulary.set(token, vocab)
     }
+
+    this.pruneVocabulary()
+  }
+
+  /**
+   * Prevents Map bloat by removing non-adopted low-frequency tokens
+   */
+  private pruneVocabulary(): void {
+    if (this.vocabulary.size <= this.MAX_VOCAB_SIZE) return
+
+    // Sort by frequency, keep adopted ones even if low freq (though unlikely)
+    const tokens = Array.from(this.vocabulary.values())
+    tokens.sort((a, b) => {
+      if (a.adopted && !b.adopted) return -1
+      if (!a.adopted && b.adopted) return 1
+      return b.frequency - a.frequency
+    })
+
+    const toKeep = tokens.slice(0, this.MAX_VOCAB_SIZE)
+    this.vocabulary = new Map(toKeep.map((v) => [v.word, v]))
   }
 
   /**
@@ -234,7 +262,7 @@ export class LearningEngine {
     if (weights.length === 0) return false
 
     const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length
-    return avgWeight > 0.8
+    return avgWeight > 0.6
   }
 
   private getOrCreateAssociation(key: string): Association {

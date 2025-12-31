@@ -33,6 +33,19 @@ export interface Scar {
   timestamp: number
 }
 
+export interface ConceptCluster {
+  id: string
+  verbs: string[]
+  bias: number
+  volatility: number
+}
+
+export interface InteractionTrajectory {
+  outcomes: Outcome[]
+  purityTrend: number
+  loyalty: number
+}
+
 export interface LearningContext {
   verb: string
   time: number
@@ -41,16 +54,21 @@ export interface LearningContext {
   emotionBefore: EmotionVector
   emotionAfter: EmotionVector
   userId?: string
+  xpGained?: number
 }
 
 export interface WarmSnapshot {
   repetitionScore: number
   lastOutcome?: Outcome
+  trajectory?: InteractionTrajectory
+  recentPurities?: number[]
 }
 
 export interface ColdSnapshot {
   scars: number
   bonds: number
+  xp: number
+  clusters: ConceptCluster[]
 }
 
 export interface WillContext {

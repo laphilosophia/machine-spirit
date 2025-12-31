@@ -4,6 +4,7 @@ export class WarmMemory {
   private cache: Map<string, number> = new Map()
   private readonly MAX_SIZE = 128
   private recentInputs: string[] = []
+  private recentPurities: number[] = []
   private lastOutcome: Outcome | undefined = undefined
 
   constructor() {}
@@ -31,6 +32,16 @@ export class WarmMemory {
   }
 
   /**
+   * Track ritual purity for trend analysis
+   */
+  pushPurity(purity: number): void {
+    this.recentPurities.push(purity)
+    if (this.recentPurities.length > 10) {
+      this.recentPurities.shift()
+    }
+  }
+
+  /**
    * Record the outcome of the last interaction
    */
   recordOutcome(outcome: Outcome): void {
@@ -49,10 +60,11 @@ export class WarmMemory {
     return Math.min(1.0, (matches - 1) * 0.2)
   }
 
-  getSnapshot(): { repetitionScore: number; lastOutcome?: Outcome } {
+  getSnapshot(): { repetitionScore: number; lastOutcome?: Outcome; recentPurities: number[] } {
     const lastInput = this.recentInputs[this.recentInputs.length - 1] || ''
     return {
       repetitionScore: this.calculateRepetitionScore(lastInput),
+      recentPurities: [...this.recentPurities],
       ...(this.lastOutcome !== undefined && { lastOutcome: this.lastOutcome }),
     }
   }

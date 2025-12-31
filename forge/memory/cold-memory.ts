@@ -73,11 +73,24 @@ export class ColdMemory {
         id INTEGER PRIMARY KEY CHECK (id = 1),
         data TEXT DEFAULT '{}'
       );
+
+      CREATE TABLE IF NOT EXISTS cognitive_profile (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        xp INTEGER DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS clusters (
+        id TEXT PRIMARY KEY,
+        verbs TEXT,
+        bias REAL DEFAULT 0.0,
+        volatility REAL DEFAULT 0.1
+      );
     `)
 
     // Ensure singleton rows exist
     this.db.exec(`INSERT OR IGNORE INTO emotions (id) VALUES (1)`)
     this.db.exec(`INSERT OR IGNORE INTO learning_state (id) VALUES (1)`)
+    this.db.exec(`INSERT OR IGNORE INTO cognitive_profile (id) VALUES (1)`)
   }
 
   saveInteraction(input: string, outcome: string) {
@@ -123,10 +136,15 @@ export class ColdMemory {
     const bondSum = this.db.prepare('SELECT COALESCE(SUM(score), 0) as total FROM bonds').get() as {
       total: number
     }
+    const xpCount = this.db.prepare('SELECT xp FROM cognitive_profile WHERE id = 1').get() as {
+      xp: number
+    }
 
     return {
       scars: scarCount.count,
       bonds: bondSum.total,
+      xp: xpCount.xp,
+      clusters: [], // Placeholder for cluster loading
     }
   }
 
@@ -177,6 +195,30 @@ export class ColdMemory {
       | undefined
 
     return row?.data ?? null
+  }
+
+  saveXP(xp: number): void {
+    const stmt = this.db.prepare('UPDATE cognitive_profile SET xp = ? WHERE id = 1')
+    stmt.run(xp)
+  }
+
+  saveClusters(clusters: import('../types').ConceptCluster[]): void {
+    const stmt = this.db.prepare(
+      'INSERT OR REPLACE INTO clusters (id, verbs, bias, volatility) VALUES (?, ?, ?, ?)'
+    )
+    for (const cluster of clusters) {
+      stmt.run(cluster.id, JSON.stringify(cluster.verbs), cluster.bias, cluster.volatility)
+    }
+  }
+
+  loadClusters(): import('../types').ConceptCluster[] {
+    const rows = this.db.prepare('SELECT * FROM clusters').all() as any[]
+    return rows.map((row) => ({
+      id: row.id,
+      verbs: JSON.parse(row.verbs),
+      bias: row.bias,
+      volatility: row.volatility,
+    }))
   }
 
   close() {

@@ -12,12 +12,12 @@ const VALID_OUTCOMES: Outcome[] = ['ACCEPT', 'REJECT', 'SILENCE', 'ANGER', 'OMEN
 function createMockContext(overrides: Partial<WillContext> = {}): WillContext {
   return {
     warm: { repetitionScore: 0 },
-    cold: { scars: 0, bonds: 0 },
     emotions: { anger: 0.1, trust: 0.5, ennui: 0.1, curiosity: 0.5, fear: 0 },
     semantic: [],
     entropy: Math.random(),
     purity: 0.5,
     time: Date.now(),
+    cold: { scars: 0, bonds: 0, xp: 0, clusters: [] },
     ...overrides,
   }
 }
@@ -102,6 +102,32 @@ describe('WillEngine', () => {
 
       // Should produce at least 2 different outcomes
       assert.ok(outcomes.size >= 2, 'outcomes should vary')
+    })
+  })
+  describe('trauma awareness', () => {
+    it('should bypass normal probability and return negative outcome when scar is present', () => {
+      const learningEngine = new LearningEngine()
+      const willEngine = new WillEngine(learningEngine)
+
+      const hour = 14
+      learningEngine.learn({
+        verb: 'pain-trigger',
+        time: new Date().setHours(hour, 0, 0, 0),
+        semantic: ['pain'],
+        outcome: 'ANGER',
+        emotionBefore: { anger: 0.1, trust: 0.5, ennui: 0.1, curiosity: 0.5, fear: 0 },
+        emotionAfter: { anger: 0.9, trust: 0.1, ennui: 0.1, curiosity: 0.1, fear: 0.6 },
+      })
+
+      const ctx = createMockContext({
+        time: new Date().setHours(hour, 0, 0, 0),
+      })
+
+      const outcome = willEngine.decide('pain-trigger', ctx)
+      assert.ok(
+        ['ANGER', 'REJECT', 'SILENCE', 'WHISPER'].includes(outcome),
+        'trauma triggers immediate non-deterministic negative response'
+      )
     })
   })
 })

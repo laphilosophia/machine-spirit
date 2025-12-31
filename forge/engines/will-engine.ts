@@ -9,7 +9,21 @@ export class WillEngine {
    * Never prints, never writes DB. Only decides.
    */
   decide(verb: string, ctx: WillContext): Outcome {
-    // 1. Calculate Base Probabilities (from Emotions & Spec 0002)
+    // 1. Check for Scars (Trauma Bypass)
+    const hour = new Date(ctx.time).getHours()
+    const scar = this.learningEngine.checkScarTrigger(verb, hour)
+
+    if (scar) {
+      // Law #6: No deterministic contract. Even trauma has chaos.
+      const traumaEntropy = Math.random()
+      if (traumaEntropy < 0.1) return 'SILENCE'
+      if (traumaEntropy < 0.2) return 'WHISPER'
+
+      // Immediate negative reaction based on trauma severity
+      return scar.severity > 0.7 ? 'ANGER' : 'REJECT'
+    }
+
+    // 2. Calculate Base Probabilities (from Emotions & Spec 0002)
     let probabilities = this.calculateBaseProbabilities(ctx)
 
     // 2. Adjust based on Learning Engine (Pavlovian & Context)
@@ -28,7 +42,20 @@ export class WillEngine {
       probabilities = this.normalize(probabilities)
     }
 
-    // 4. Select Outcome (Weighted Random)
+    // 4. Apply Cognitive Generalization (SPEC-0010)
+    const clusters = ctx.cold.clusters || []
+    const cluster = clusters.find((c) => c.verbs.includes(verb))
+    if (cluster && cluster.bias !== 0) {
+      if (cluster.bias > 0) {
+        probabilities.ACCEPT *= 1 + cluster.bias * 0.3
+      } else {
+        probabilities.REJECT *= 1 - cluster.bias * 0.3
+        probabilities.ANGER *= 1 - cluster.bias * 0.2
+      }
+      probabilities = this.normalize(probabilities)
+    }
+
+    // 5. Select Outcome (Weighted Random)
     return this.weightedRandomPick(probabilities)
   }
 
